@@ -8,10 +8,30 @@ export default defineConfig({
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
     },
-    // fs: {
-    //   // 允许服务器访问上层目录
-    //   allow: [".."],
-    // },
+    fs: {
+      // 允许服务器访问上层目录
+      allow: [".."],
+    },
+    plugins: [
+      {
+        name: 'serve-models',
+        configureServer(server) {
+          server.middlewares.use((req, res, next) => {
+            if (req.url.startsWith('/models')) {
+              const modelName = req.url.split('/models/')[1];
+              const modelPath = path.join(__dirname, 'models', modelName);
+              if (fs.existsSync(modelPath)) {
+                res.sendFile(modelPath);
+              } else {
+                res.status(404).send('Model not found');
+              }
+            } else {
+              next();
+            }
+          });
+        },
+      },
+    ],
   },
   optimizeDeps: {
     exclude: ["onnxruntime-web"],
