@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SRCNN 超分辨率</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <script type="module">
+      import * as ort from "onnxruntime-web/all";
+      import Chart from "chart.js/auto";
+      window.ort = ort;
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>SRCNN 图像超分辨率</h1>
+
+      <div class="backend-selector">
+        <label for="backendSelect">选择推理后端:</label>
+        <select id="backendSelect" onchange="switchBackend(this.value)">
+          <option value="webgpu">WebGPU (推荐)</option>
+          <option value="webgl">WebGL</option>
+          <option value="wasm">WASM</option>
+          <option value="webnn">WebNN</option>
+        </select>
+        <span id="backendStatus"></span>
+      </div>
+
+      <div class="model-selector">
+        <label for="modelSelect">选择模型:</label>
+        <select id="modelSelect" onchange="switchModel(this.value)">
+          <option value="srcnn_x3">SRCNN x3</option>
+          <option value="srcnn_x4" selected>SRCNN x4</option>
+          <option value="Real-ESRGAN-General-x4v3">
+            Real-ESRGAN-General-x4v3
+          </option>
+          <option value="Real-ESRGAN-x4plus">Real-ESRGAN-x4plus</option>
+        </select>
+        <span id="modelStatus"></span>
+      </div>
+
+      <input
+        type="file"
+        id="imageInput"
+        accept="image/*"
+        onchange="previewImage(event)"
+      />
+      <button onclick="processImage()">开始处理</button>
+      <div id="loading" class="loading">处理中...</div>
+
+      <div class="image-container">
+        <div class="image-box">
+          <h3>原始图片</h3>
+          <img id="inputImage" src="" alt="输入图片" />
+          <div id="inputInfo" class="image-info"></div>
+        </div>
+        <div class="image-box">
+          <h3>处理结果</h3>
+          <img id="outputImage" src="" alt="输出图片" />
+          <div id="outputInfo" class="image-info"></div>
+          <div
+            id="processingIndicator"
+            class="processing-indicator"
+            style="display: none"
+          >
+            <div class="spinner"></div>
+            <div>处理中...</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="processInfo" class="process-info-panel"></div>
+
+      <div class="perf-panel">
+        <h3>性能测试面板</h3>
+        <div class="test-controls">
+          <button id="runAllTests" class="test-button">测试所有后端</button>
+          <button id="runWebGPU" class="test-button">测试 WebGPU</button>
+          <button id="runWasm" class="test-button">测试 WASM</button>
+          <button id="testHardware" class="test-button">测试硬件限制</button>
+          <button id="interruptButton" class="test-button">中断推理</button>
+        </div>
+        <div class="perf-grid">
+          <div id="webgpu-metrics" class="backend-metrics">
+            <h4>WebGPU 性能</h4>
+            <div class="metric-card">
+              <div class="metric-title">推理时间</div>
+              <div class="metric-value">
+                平均: -- ms<br />
+                最小: -- ms<br />
+                最大: -- ms<br />
+                标准差: -- ms<br />
+                FPS: --
+              </div>
+            </div>
+          </div>
+          <div id="wasm-metrics" class="backend-metrics">
+            <h4>WASM 性能</h4>
+            <div class="metric-card">
+              <div class="metric-title">推理时间</div>
+              <div class="metric-value">
+                平均: -- ms<br />
+                最小: -- ms<br />
+                最大: -- ms<br />
+                标准差: -- ms<br />
+                FPS: --
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="perfChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import {
+        initONNX,
+        checkBackendAvailability,
+        switchBackend,
+        switchModel,
+        state,
+      } from "./js/core.js";
+      import {
+        processImage,
+        handleTestImageUpload,
+        previewImage,
+      } from "./js/imageProcessor.js";
+      import {
+        runSingleBackendTest,
+        runAllBenchmarks,
+      } from "./js/benchmark.js";
+      import { testHardwareLimits, checkAdapter } from "./js/hardwareTest.js";
+
+      // 初始化页面
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          const backends = ["webgpu", "webgl", "wasm"];
+          const backendSelect = document.getElementById("backendSelect");
+
+          for (const backend of backends) {
+            const isAvailable = await checkBackendAvailability(backend);
+            console.log(`后端 ${backend} 可用性:`, isAvailable);
+
+            if (!isAvailable) {
+              const option = backendSelect.querySelector(
+                `option[value="${backend}"]`
+              );
+              if (option) {
+                option.disabled = true;
+                option.text += " (不可用)";
+              }
+            }
+          }
+
+          for (const backend of backends) {
+            if (await checkBackendAvailability(backend)) {
+              backendSelect.value = backend;
+              await switchBackend(backend);
+              break;
+            }
+          }
+
+          const success = await initONNX();
+          if (!success) {
+            console.error("模型初始化失败");
+          }
+        } catch (e) {
+          console.error("初始化失败:", e);
+        }
+      });
+
+      // 设置按钮事件监听器
+      document.getElementById("runAllTests").onclick = runAllBenchmarks;
+      document.getElementById("runWebGPU").onclick = () =>
+        runSingleBackendTest("webgpu");
+      document.getElementById("runWasm").onclick = () =>
+        runSingleBackendTest("wasm");
+      document.getElementById("testHardware").onclick = testHardwareLimits;
+      document.getElementById("interruptButton").onclick = () => {
+        state.isInterrupted = true;
+      };
+
+      // 设置性能监听器
+      if ("PerformanceObserver" in window) {
+        const longTaskObserver = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            console.log(
+              `长任务: ${entry.name}, 持续时��: ${entry.duration.toFixed(2)}ms`
+            );
+          }
+        });
+
+        longTaskObserver.observe({ entryTypes: ["longtask"] });
+      }
+
+      // 导出全局函数
+      window.processImage = processImage;
+      window.handleTestImageUpload = handleTestImageUpload;
+      window.switchBackend = switchBackend;
+      window.switchModel = switchModel;
+      window.previewImage = previewImage;
+
+      document.getElementById("modelSelect").onchange = async function (event) {
+        const modelName = event.target.value;
+        console.log("模型选择变更:", modelName);
+        const success = await switchModel(modelName);
+        if (!success) {
+          console.error("模型切换失败，重置选择");
+          event.target.value = currentModel; // 重置为当前模型
+        }
+      };
+    </script>
+  </body>
+</html>
