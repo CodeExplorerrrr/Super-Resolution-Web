@@ -414,4 +414,5 @@ export const ModelConfigs = {
       }
     },
   },
+  "Anime": {}
 };
