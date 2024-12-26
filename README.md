@@ -2,11 +2,11 @@
 
 # SR-Inference-Web
 
-[![GitHub Stars](https://img.shields.io/github/stars/your-username/SR-Inference-Web?style=social)](https://github.com/your-username/SR-Inference-Web)
-[![GitHub Forks](https://img.shields.io/github/forks/your-username/SR-Inference-Web?style=social)](https://github.com/your-username/SR-Inference-Web/fork)
-[![License](https://img.shields.io/github/license/your-username/SR-Inference-Web)](./LICENSE)
-[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen)](https://github.com/your-username/SR-Inference-Web/issues)
-![Visitors](https://visitor-badge.glitch.me/badge?page_id=your-username.SR-Inference-Web)
+[![GitHub Stars](https://img.shields.io/github/stars/CodeExplorerrrr/SR-Inference-Web?style=social)](https://github.com/CodeExplorerrrr/SR-Inference-Web)
+[![GitHub Forks](https://img.shields.io/github/forks/CodeExplorerrrr/SR-Inference-Web?style=social)](https://github.com/CodeExplorerrrr/SR-Inference-Web/fork)
+[![License](https://img.shields.io/github/license/CodeExplorerrrr/SR-Inference-Web)](./LICENSE)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen)](https://github.com/CodeExplorerrrr/SR-Inference-Web/issues)
+![Visitors](https://visitor-badge.glitch.me/badge?page_id=CodeExplorerrrr.SR-Inference-Web)
 
 ---
 
