@@ -17,17 +17,23 @@ A browser-based super-resolution inference tool that enhances image quality usin
 
 ### 1. Clone the Repository
 To run or develop the project locally, clone the repository using the following command:
+```bash
 git clone https://github.com/your-username/SR-Inference-Web.git
+```
 
 ### 2. Install Dependencies
 Navigate to the project directory and install the required dependencies:
+```bash
 cd SR-Inference-Web
 npm install
+```
 
 ### 3. Run the Project
 To start the local server for development:
+```bash
 npm start
 Open your browser and go to http://localhost:3000 to view the project.
+```
 
 ## Usage Instructions
 Upload an image you wish to upscale.
