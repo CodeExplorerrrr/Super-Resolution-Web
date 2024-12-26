@@ -30,27 +30,27 @@ npm start
 Open your browser and go to http://localhost:3000 to view the project.
 
 ## Usage Instructions
-1. Upload an image you wish to upscale.
-2. Optionally, adjust the image size or quality settings if available.
-3. Click the "Start Inference" button to view the upscaled result.
+Upload an image you wish to upscale.
+Optionally, adjust the image size or quality settings if available.
+Click the "Start Inference" button to view the upscaled result.
 
 ## Dependencies
-- TensorFlow.js: For running the model inference in the browser
-- React.js: For building the frontend UI
-- Other Libraries: List any other libraries you are using
+TensorFlow.js: For running the model inference in the browser
+React.js: For building the frontend UI
+Other Libraries: List any other libraries you are using
 
 ## Model Information
 
-### 1. Model Used
+### Model Used
 This project uses the SRCNN Model developed by [Author Name or Organization].
 The model is licensed under the MIT License.
 
-### 2. Model DownLoad Link
+### Model DownLoad Link
 If the model needs to be downloaded separately, provide the download link or instructions:
 - [Model Repository Link]
 - Or include the model files directly in the project
 
 ## Lisense
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the [MIT License](./LICENSE) - see the LICENSE file for details.
 
 
