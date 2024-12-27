@@ -38,6 +38,7 @@ async function initONNX() {
     session = await ort.InferenceSession.create(getModelPath(currentModel), {
       executionProviders: [currentBackend],
       graphOptimizationLevel: "all",
+      verbose: true,
       // logSeverityLevel: 0,
     });
 

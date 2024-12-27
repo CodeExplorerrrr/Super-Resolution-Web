@@ -84,6 +84,116 @@ export const ModelConfigs = {
       return canvas.toDataURL("image/png", 1.0);
     },
   },
+  "ESRGAN": {
+    name: "ESRGAN",
+    scale: 4,
+    tileSize: 128,
+    overlapSize: 6, // 如果需要重叠，可以调整此值
+    needTile: true,
+    inputName: "image",
+    outputName: "upscaled_image",
+    preprocess: async (imageElement) => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = imageElement.width;
+      canvas.height = imageElement.height;
+
+      ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      const data = new Float32Array(3 * canvas.width * canvas.height);
+
+      for (let i = 0; i < canvas.width * canvas.height; i++) {
+        data[i] = imageData.data[i * 4] / 255.0; // R
+        data[canvas.width * canvas.height + i] = imageData.data[i * 4 + 1] / 255.0; // G
+        data[2 * canvas.width * canvas.height + i] = imageData.data[i * 4 + 2] / 255.0; // B
+      }
+
+      return {
+        tensor: new ort.Tensor("float32", data, [1, 3, canvas.height, canvas.width]),
+        colorInfo: {
+          width: canvas.width,
+          height: canvas.height,
+        },
+      };
+    },
+    postprocess: async (tensor, colorInfo) => {
+      const canvas = document.createElement("canvas");
+      const width = tensor.dims[3];
+      const height = tensor.dims[2];
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      const imageData = ctx.createImageData(width, height);
+
+      const outputData = tensor.data;
+
+      for (let i = 0; i < width * height; i++) {
+        imageData.data[i * 4] = outputData[i] * 255; // R
+        imageData.data[i * 4 + 1] = outputData[width * height + i] * 255; // G
+        imageData.data[i * 4 + 2] = outputData[2 * width * height + i] * 255; // B
+        imageData.data[i * 4 + 3] = 255; // A
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      return canvas.toDataURL("image/png", 1.0);
+    },
+  },
+  "RealESRGAN_x4plus_anime": {
+    name: "RealESRGAN_x4plus_anime",
+    scale: 4,
+    tileSize: 128,
+    overlapSize: 1,
+    needTile: false,
+    inputName: "image.1",
+    outputName: "image",
+    preprocess: async (imageElement) => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = imageElement.width;
+      canvas.height = imageElement.height;
+    
+      ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+      const data = new Float32Array(3 * canvas.width * canvas.height);
+    
+      for (let i = 0; i < canvas.width * canvas.height; i++) {
+        data[i] = imageData.data[i * 4] / 255.0; // R
+        data[canvas.width * canvas.height + i] = imageData.data[i * 4 + 1] / 255.0; // G
+        data[2 * canvas.width * canvas.height + i] = imageData.data[i * 4 + 2] / 255.0; // B
+      }
+    
+      return {
+        tensor: new ort.Tensor("float32", data, [1, 3, canvas.height, canvas.width]),
+        colorInfo: {
+          width: canvas.width,
+          height: canvas.height,
+        },
+      };
+    },
+    postprocess: async (tensor, colorInfo) => {
+      const canvas = document.createElement("canvas");
+      const width = tensor.dims[3];
+      const height = tensor.dims[2];
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      const imageData = ctx.createImageData(width, height);
+    
+      const outputData = tensor.data;
+    
+      for (let i = 0; i < width * height; i++) {
+        imageData.data[i * 4] = outputData[i] * 255; // R
+        imageData.data[i * 4 + 1] = outputData[width * height + i] * 255; // G
+        imageData.data[i * 4 + 2] = outputData[2 * width * height + i] * 255; // B
+        imageData.data[i * 4 + 3] = 255; // A
+      }
+    
+      ctx.putImageData(imageData, 0, 0);
+      return canvas.toDataURL("image/png", 1.0);
+    },
+  },
   "Real-ESRGAN-General-x4v3": {
     name: "Real-ESRGAN-General-x4v3",
     scale: 4,
