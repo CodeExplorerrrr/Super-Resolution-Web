@@ -24,6 +24,7 @@
     processImage,
     handleTestImageUpload,
     previewImage,
+    downloadImage
   } from "./js/imageProcessor.js";
   import {
     runSingleBackendTest,
@@ -37,6 +38,7 @@
   window.processImage = processImage;
   window.handleTestImageUpload = handleTestImageUpload;
   window.switchBackend = switchBackend;
+  window.downloadImage = downloadImage;
   // 初始化页面
   document.addEventListener("DOMContentLoaded", async () => {
     try {
@@ -152,6 +154,10 @@
   <button onclick="processImage()">开始处理</button>
   <div id="loading" class="loading">处理中...</div>
 
+  <div id="progressContainer">
+    <progress id="progressBar" value="0" max="100" style="width: 100%;"></progress>
+  </div>
+
   <div class="image-container">
     <div class="image-box">
       <h3>原始图片</h3>
@@ -170,6 +176,19 @@
         <div class="spinner"></div>
         <div>处理中...</div>
       </div>
+    </div>
+  </div>
+
+  <div class="image-comparison-container">
+    <div class="image-comparison-slider">
+      <img id="originalImage" src="" alt="原始图片" />
+      <img id="processedImage" src="" alt="处理后图片" />
+      <div class="slider">
+        <div class="slider-handle"></div>
+      </div>
+    </div>
+    <div class="btn-container">
+      <div class="download" onclick="downloadImage()">下载</div>
     </div>
   </div>
 

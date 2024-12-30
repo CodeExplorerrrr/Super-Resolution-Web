@@ -1,6 +1,8 @@
 import { session, state, initONNX, currentModel } from "./core.js";
 import { ModelConfigs } from "./modelConfigs.js";
 
+let outputImageInfo;
+
 // 文件选择预览
 async function previewImage(event) {
   const input = event.target;
@@ -98,6 +100,10 @@ function updateOutputInfo(image) {
   const canvas = document.createElement("canvas");
   canvas.width = image.width;
   canvas.height = image.height;
+  outputImageInfo = {
+    width: image.width,
+    height: image.height,
+  }
   const ctx = canvas.getContext("2d");
   ctx.drawImage(image, 0, 0);
   const blob = canvas.toBlob((blob) => {
@@ -170,6 +176,7 @@ async function processImage() {
 
   const input = document.getElementById("imageInput");
   const loadingDiv = document.getElementById("loading");
+  const progressContainer = document.getElementById("progressContainer");
   const processingIndicator = document.getElementById("processingIndicator");
 
   if (!input.files || !input.files[0]) {
@@ -180,6 +187,9 @@ async function processImage() {
   loadingDiv.style.display = "block";
   processingIndicator.style.display = "block";
   state.isInterrupted = false;
+  if (ModelConfigs[currentModel].needTile) {
+    progressContainer.style.display = "block";
+  }
 
   try {
     const image = new Image();
@@ -263,6 +273,12 @@ async function processImage() {
     updateOutputInfo(outputImage);
 
     document.getElementById("outputImage").src = result;
+    // 设置对比图像
+    document.getElementById("originalImage").src = image.src;
+    document.getElementById("processedImage").src = result;
+
+    // 初始化对比效果
+    initImageComparison();
   } catch (error) {
     console.error("处理失败:", error);
     alert("处理失败: " + error.message);
@@ -270,6 +286,68 @@ async function processImage() {
     loadingDiv.style.display = "none";
     processingIndicator.style.display = "none";
   }
+}
+
+function initImageComparison() {
+  const slider = document.querySelector(".slider");
+  const sliderHandle = document.querySelector(".slider-handle");
+  const imageContainer = document.querySelector(".image-comparison-slider");
+  const originalImage = document.getElementById("originalImage");
+  const processedImage = document.getElementById("processedImage");
+  const container = document.querySelector(".image-comparison-container");
+  container.style.display = "flex";
+  imageContainer.style.width = outputImageInfo.width + 'px';
+  container.style.height = outputImageInfo.height + 'px';
+  console.log("style", container.style.height);
+
+  let isSliding = false;
+
+  const startSliding = () => {
+    isSliding = true;
+  };
+
+  const stopSliding = () => {
+    isSliding = false;
+  };
+
+  const slide = (event) => {
+    if (!isSliding) return;
+
+    const containerRect = container.getBoundingClientRect();
+    let offsetX = event.clientX - containerRect.left;
+
+    // 限制滑动范围
+    if (offsetX < 0) offsetX = 0;
+    if (offsetX > containerRect.width) offsetX = containerRect.width;
+
+    const percentage = (offsetX / containerRect.width) * 100;
+    slider.style.left = `${percentage}%`;
+    processedImage.style.clipPath = `inset(0 ${100 - percentage}% 0 0)`;
+  }; 
+
+  sliderHandle.addEventListener("mousedown", startSliding);
+  document.addEventListener("mouseup", stopSliding);
+  document.addEventListener("mousemove", slide);
+}
+
+//下载
+function downloadImage(){
+  // 获取处理后的图片元素
+  const processedImage = document.getElementById("outputImage");
+
+  // 检查是否有生成的图片
+  if (!processedImage || !processedImage.src) {
+    alert("没有生成的图片可供下载！");
+    return;
+  }
+
+  // 创建一个隐藏的 <a> 元素，用于触发下载
+  const downloadLink = document.createElement("a");
+  downloadLink.href = processedImage.src;
+  downloadLink.download = "processed_image.png"; // 设置下载文件名
+
+  // 触发下载
+  downloadLink.click();
 }
 
 // 分块处理大图像
@@ -301,6 +379,9 @@ async function processImageWithTiles(imageElement) {
   let totalPreprocessTime = 0;
   let totalInferenceTime = 0;
   let totalPostprocessTime = 0;
+
+  const progressBar = document.getElementById("progressBar");
+  const totalTiles = numTilesX * numTilesY;
 
   for (let y = 0; y < numTilesY; y++) {
     for (let x = 0; x < numTilesX; x++) {
@@ -369,12 +450,12 @@ async function processImageWithTiles(imageElement) {
         tileSize * scale,
         outputCanvas.height - destY
       );
-      console.log(
-        `处理进度: ${(
-          ((y * numTilesX + x + 1) / (numTilesX * numTilesY)) *
-          100
-        ).toFixed(1)}%`
-      );
+
+      // 更新进度条
+      const progress = ((y * numTilesX + x + 1) / totalTiles) * 100;
+      progressBar.value = progress;
+
+      console.log(`处理进度: ${progress.toFixed(1)}%`);
       // 直接绘制到对应位置
       outputCtx.drawImage(
         processedTile,
@@ -448,4 +529,5 @@ export {
   processImageWithTiles,
   handleTestImageUpload,
   previewImage,
+  downloadImage
 };

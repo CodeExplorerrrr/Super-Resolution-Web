@@ -7,10 +7,90 @@ body {
 .container {
   max-width: 800px;
   margin: 0 auto;
+  height: auto;
   padding: 20px;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#progressContainer {
+  width: 100%;
+  margin-top: 20px;
+  display: none;
+}
+
+.image-comparison-container {
+  position: relative;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding-top: 20px;
+  margin-bottom: 40px;
+}
+
+.image-comparison-slider {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image-comparison-slider img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.image-comparison-slider img#processedImage {
+  clip-path: inset(0 50% 0 0); /* 裁剪为显示左半部分 */
+}
+
+.slider {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 3px;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.5);
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+.slider-handle {
+  position: absolute;
+  top: 50%; /* 将半圆放置在图像下方 */
+  left: 50%; /* 调整以使半圆居中 */
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.2); /* 半透明白色 */
+  backdrop-filter: blur(2px); /* 添加磨砂模糊效果 */
+  -webkit-backdrop-filter: blur(10px); /* 兼容 WebKit 浏览器 */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* 添加边框强调磨砂效果 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
+  border-radius: 50%; /* 创建半圆 */
+  cursor: ew-resize;
+  z-index: 11;
+}
+
+.btn-container{
+  position: absolute;
+  top: 100%;
+  width: 100px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #dee2e6;
+}
+
+.download{
+  background: coral;
+  cursor: pointer;
 }
 
 .image-container {
