@@ -139,20 +139,12 @@ if (inputImages.length === 0) {
                                     // 目标路径
                                     const imagePath = path.join(imageSubDir, imageName);
 
-                                    if(extension === "png"){
-                                        const jpgBuffer = await sharp(buffer)
-                                            .toBuffer();
+                                    const jpgBuffer = await sharp(buffer)
+                                        .jpeg({quality: 90})
+                                        .toBuffer();
 
-                                        fs.writeFileSync(imagePath, jpgBuffer); // 写入文件
-                                        console.log(`图片已保存：${imagePath}`);
-                                    }else{
-                                        const jpgBuffer = await sharp(buffer)
-                                            .jpeg({quality: 90})
-                                            .toBuffer();
-
-                                        fs.writeFileSync(imagePath, jpgBuffer); // 写入文件
-                                        console.log(`图片已保存：${imagePath}`);
-                                    }
+                                    fs.writeFileSync(imagePath, jpgBuffer); // 写入文件
+                                    console.log(`图片已保存：${imagePath}`);
 
                                 }
 

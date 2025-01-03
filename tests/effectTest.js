@@ -77,8 +77,7 @@ async function compareImages() {
 
       // 检查通道数是否一致
       if (inputChannels !== outputBuffer.info.channels) {
-        console.warn(`警告: 输入图像和输出图像通道数不一致`);
-        continue; // 跳过此图像
+        console.warn(`警告: 输入图像和输出图像通道数不一致，可能会导致和实际对比图片差异过大`);
       }
 
       // 计算 PSNR
