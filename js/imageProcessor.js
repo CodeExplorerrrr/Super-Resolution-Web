@@ -1,4 +1,4 @@
-import { session, state, initONNX, currentModel } from "./core.js";
+import { session, state, initONNX, currentModel, currentBackend } from "./core.js";
 import { ModelConfigs } from "./modelConfigs.js";
 
 // 文件选择预览
@@ -181,6 +181,25 @@ async function processImage() {
     return;
   }
 
+  const file = input.files[0];
+  const image = new Image();
+  image.src = URL.createObjectURL(file);
+  // 检查图片尺寸
+  await new Promise((resolve) => {
+    image.onload = () => {
+      const { width, height } = image;
+      // 限制条件
+      if (width > 1000 || height > 1000) {
+        alert("不建议输入过大图片，会导致推理时间过长或推理失败");
+      }
+      if (currentModel === "RealESRGAN_x4plus_anime" && currentBackend === "webgpu") {
+        if (width > 400 || height > 400) {
+          alert("不建议输入过大图片，当前模型和后端限制为 400x400");
+        }
+      }
+      resolve();
+    };
+  });
   loadingDiv.style.display = "block";
   processingIndicator.style.display = "block";
   state.isInterrupted = false;
@@ -189,12 +208,8 @@ async function processImage() {
   }
 
   try {
-    const image = new Image();
-    image.src = URL.createObjectURL(input.files[0]);
-    await new Promise((resolve) => (image.onload = resolve));
-
     // 更新输入图片信息
-    updateInputInfo(image, input.files[0]);
+    updateInputInfo(image, file);
 
     let result;
     let startTime = performance.now();

@@ -7,7 +7,7 @@ if (typeof ort !== "undefined") {
 let session = null;
 let currentBackend = "wasm";
 import { ModelConfigs } from "./modelConfigs.js";
-export let currentModel = ModelConfigs["srcnn_x4"].name;
+let currentModel = ModelConfigs["srcnn_x4"].name;
 const state = {
   isInterrupted: false,
 };
@@ -222,6 +222,10 @@ export async function switchBackend(backend) {
 // 切换模型
 export async function switchModel(modelName) {
   console.log("开始切换模型:", modelName);
+  const modelStatus = document.getElementById("modelStatus");
+  if(modelStatus){
+    modelStatus.textContent = "模型加载中..."
+  }
 
   if (ModelConfigs[modelName]) {
     try {
@@ -241,7 +245,6 @@ export async function switchModel(modelName) {
       if (success) {
         console.log("模型切换成功");
         // 更新UI状态
-        const modelStatus = document.getElementById("modelStatus");
         if (modelStatus) {
           modelStatus.textContent = `✓ ${modelName} 已加载`;
           modelStatus.style.color = "green";
@@ -252,7 +255,6 @@ export async function switchModel(modelName) {
       }
     } catch (error) {
       console.error("模型切换失败:", error);
-      const modelStatus = document.getElementById("modelStatus");
       if (modelStatus) {
         modelStatus.textContent = `× 切换失败`;
         modelStatus.style.color = "red";
@@ -299,6 +301,7 @@ window.addEventListener("load", async () => {
 
 export {
   session,
+  currentModel,
   currentBackend,
   state,
 };

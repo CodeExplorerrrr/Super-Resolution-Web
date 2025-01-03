@@ -4,7 +4,7 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 
 export default defineConfig({
   server: {
-    port: 8002,
+    port: 8000,
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",

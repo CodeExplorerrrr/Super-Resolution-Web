@@ -1,83 +1,100 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
-import psnr from 'psnr';  // 引用安装的 psnr 库
-import ssim from 'ssim.js';
+import { createCanvas, ImageData } from 'canvas'; // 导入 canvas 库
+import { ssim } from 'ssim.js'; // 使用命名导入
 
-// 加载图片并转换为 RGBA 数据
-async function loadImageAsData(imagePath) {
-  const imageBuffer = fs.readFileSync(imagePath);
-  const image = await sharp(imageBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  return {
-    width: image.info.width,
-    height: image.info.height,
-    data: image.data,
-  };
+// 输入和输出文件夹路径
+const inputDir = './tests/image_input';
+const outputDir = './tests/image_output';
+
+// 获取输入图片路径
+const inputImages = fs.readdirSync(inputDir).filter((file) => /\.(png|jpe?g)$/i.test(file));
+if (inputImages.length === 0) {
+  console.error('输入文件夹中没有图片，请检查输入文件夹！');
+  process.exit(1);
 }
 
-// 计算 PSNR
-function calculatePSNR(originalData, generatedData) {
-  // 由于 psnr 库期望的是一维的像素数组，我们可以将 RGBA 数据按通道展平
-  const originalPixels = Array.from(originalData.data);
-  const generatedPixels = Array.from(generatedData.data);
-  
-  return psnr(originalPixels, generatedPixels);
+async function calculatePSNR(img1, img2) {
+  const mse = img1.reduce((acc, val, index) => acc + Math.pow(val - img2[index], 2), 0) / img1.length;
+  if (mse === 0) return Infinity; // 完全相同
+  const maxPixelValue = 255; // 对于8位图像
+  return 10 * Math.log10((maxPixelValue * maxPixelValue) / mse);
 }
 
-// 计算 SSIM
-async function calculateSSIM(originalPath, generatedPath) {
-    const originalData = await loadImageAsData(originalPath);
-    const generatedData = await loadImageAsData(generatedPath);
-  
-    // 使用 ssim.js 进行对比
-    const { mssim, performance } = ssim({
-      imageA: originalData.data,
-      imageB: generatedData.data,
-      width: originalData.width,
-      height: originalData.height,
-    });
-  
-    console.log(`SSIM: ${mssim} (${performance}ms)`);
-    return mssim;
+async function calculateSSIM(img1, img2, width, height) {
+  // 使用 canvas 创建 ImageData
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+
+  // 将原始数据加载到 canvas 上，创建 ImageData
+  const imageData1 = new ImageData(new Uint8ClampedArray(img1), width, height);
+  const imageData2 = new ImageData(new Uint8ClampedArray(img2), width, height);
+
+  // 使用 ssim.js 计算 SSIM
+  const ssimResult = ssim(imageData1, imageData2);
+  return ssimResult;
 }
 
-// 使用例子：对比两张图片
-async function testImageQuality(originalPath, generatedPath) {
-  try {
-    const originalData = await loadImageAsData(originalPath);
-    const generatedData = await loadImageAsData(generatedPath);
+async function compareImages() {
+  for (const inputImage of inputImages) {
+    const inputImagePath = path.join(inputDir, inputImage);
+    const inputBuffer = await sharp(inputImagePath).raw().toBuffer({ resolveWithObject: true });
+    const inputWidth = inputBuffer.info.width;
+    const inputHeight = inputBuffer.info.height;
+    const inputChannels = inputBuffer.info.channels;
 
-    const psnrValue = calculatePSNR(originalData, generatedData);
-    const ssimValue = calculateSSIM(originalData, generatedData);
+    console.log(`输入图像: ${inputImage}`);
+    console.log(`输入图像尺寸: ${inputWidth}x${inputHeight}`);
+    console.log(`输入图像通道数: ${inputChannels}`);
 
-    console.log(`对比图像：${generatedPath}`);
-    console.log(`PSNR: ${psnrValue.toFixed(2)} dB`);
-    console.log(`SSIM: ${ssimValue.toFixed(4)}`);
-
-    // 判断效果是否良好
-    if (psnrValue > 30 && ssimValue > 0.9) {
-      console.log("图像效果良好，PSNR 和 SSIM 达标");
-    } else {
-      console.log("图像效果较差，请重新调整超分辨率参数");
+    // 获取该输入图像对应的输出文件夹
+    const outputSubDir = path.join(outputDir, path.basename(inputImage, path.extname(inputImage)));
+    if (!fs.existsSync(outputSubDir)) {
+      console.warn(`警告: 输出文件夹中找不到 ${inputImage} 的对应文件夹，跳过此图像`);
+      continue;
     }
-  } catch (error) {
-    console.error("图片加载或计算错误:", error);
+
+    // 获取该输入图像对应的输出图片列表
+    const outputImages = fs.readdirSync(outputSubDir).filter((file) => /\.(png|jpe?g)$/i.test(file));
+    if (outputImages.length === 0) {
+      console.warn(`警告: ${inputImage} 的输出文件夹中没有图片，跳过此图像`);
+      continue;
+    }
+
+    for (const outputImageName of outputImages) {
+      const outputImagePath = path.join(outputSubDir, outputImageName);
+
+      // 读取输出图像并调整尺寸
+      const outputBuffer = await sharp(outputImagePath)
+          .resize({ width: inputWidth, height: inputHeight }) // 调整为输入图像的尺寸
+          .raw()
+          .toBuffer({ resolveWithObject: true });
+
+      console.log(`输出图像: ${outputImageName}`);
+      console.log(`输出图像尺寸: ${outputBuffer.info.width}x${outputBuffer.info.height}`);
+      console.log(`输出图像通道数: ${outputBuffer.info.channels}`);
+
+      // 检查通道数是否一致
+      if (inputChannels !== outputBuffer.info.channels) {
+        console.warn(`警告: 输入图像和输出图像通道数不一致`);
+        continue; // 跳过此图像
+      }
+
+      // 计算 PSNR
+      const psnrValue = await calculatePSNR(inputBuffer.data, outputBuffer.data);
+      console.log(`PSNR: ${psnrValue.toFixed(2)}`);
+
+      // 计算 SSIM
+      const ssimValue = await calculateSSIM(inputBuffer.data, outputBuffer.data, inputWidth, inputHeight);
+      console.log(`SSIM: ${ssimValue.mssim.toFixed(4)}`); // 输出 mssim 值
+
+      console.log('--------------------------------');
+    }
   }
 }
 
-// 批量测试生成图像
-async function testAllGeneratedImages(originalImagePath, generatedFolderPath) {
-  const files = fs.readdirSync(generatedFolderPath);  // 读取文件夹中的所有文件
-  const imageFiles = files.filter(file => file.endsWith('.jpg') || file.endsWith('.png'));  // 过滤出图片文件
-
-  for (const imageFile of imageFiles) {
-    const generatedImagePath = path.resolve(generatedFolderPath, imageFile);
-    await testImageQuality(originalImagePath, generatedImagePath);
-  }
-}
-
-// 测试函数
-const originalImagePath = path.resolve('./tests/image_input/image.jpg');  // 替换为原图路径
-const generatedFolderPath = path.resolve('./tests/image_output');  // 生成的图像文件夹路径
-
-testAllGeneratedImages(originalImagePath, generatedFolderPath);
+// 调用比较函数
+compareImages().catch((error) => {
+  console.error('发生错误:', error);
+});
