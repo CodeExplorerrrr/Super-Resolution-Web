@@ -32,6 +32,17 @@
   } from "./js/benchmark.js";
   import { testHardwareLimits, checkAdapter } from "./js/hardwareTest.js";
 
+  const hideButton = () => {
+    const imageContainer = document.getElementsByClassName("image-container")[0];
+    if(imageContainer.style.display !== "none"){
+      imageContainer.style.display = "none"
+    } else {
+      imageContainer.style.display = "flex"
+    }
+  }
+
+  window.hideButton = hideButton;
+
   // 导出全局函数
   window.switchModel = switchModel;
   window.previewImage = previewImage;
@@ -71,6 +82,13 @@
       const success = await initONNX();
       if (!success) {
         console.error("模型初始化失败");
+      } else {
+        // 更新UI状态
+        const modelStatus = document.getElementById("modelStatus");
+        if (modelStatus) {
+          modelStatus.textContent = `✓ srcnn_x4 已加载`;
+          modelStatus.style.color = "green";
+        }
       }
     } catch (e) {
       console.error("初始化失败:", e);
@@ -124,10 +142,10 @@
   <div class="backend-selector">
     <label for="backendSelect">选择推理后端:</label>
     <select id="backendSelect" onchange="switchBackend(this.value)">
-      <option value="webgpu">WebGPU (推荐)</option>
-      <option value="webgl">WebGL</option>
-      <option value="wasm">WASM</option>
-      <option value="webnn">WebNN</option>
+      <option value="webgpu">webgpu (推荐)</option>
+      <option value="webgl">webgl</option>
+      <option value="wasm">wasm</option>
+      <option value="webnn">webnn</option>
     </select>
     <span id="backendStatus"></span>
   </div>
@@ -136,8 +154,6 @@
     <label for="modelSelect">选择模型:</label>
     <select id="modelSelect" onchange="switchModel(this.value)">
       <option value="srcnn_x4" selected>SRCNN x4</option>
-      <option value="ESRGAN">ESRGAN</option>
-      <!-- <option value="4xRealplksr">Realplksr</option> -->
       <option value="Real-ESRGAN-General-x4v3">Real-ESRGAN-General-x4v3</option>
       <option value="Real-ESRGAN-x4plus">Real-ESRGAN-x4plus</option>
       <option value="RealESRGAN_x4plus_anime">Real-ESRGAN-x4plus-anime</option>
@@ -151,7 +167,8 @@
           accept="image/*"
           onchange="previewImage(event)"
   />
-  <button onclick="processImage()">开始处理</button>
+  <button id="startProcessingButton" onclick="processImage()">开始处理</button>
+  <button onclick="hideButton()">隐藏</button>
   <div id="loading" class="loading">处理中...</div>
 
   <div id="progressContainer">

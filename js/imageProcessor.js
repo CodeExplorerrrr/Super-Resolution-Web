@@ -1,8 +1,6 @@
 import { session, state, initONNX, currentModel } from "./core.js";
 import { ModelConfigs } from "./modelConfigs.js";
 
-let outputImageInfo;
-
 // 文件选择预览
 async function previewImage(event) {
   const input = event.target;
@@ -100,10 +98,9 @@ function updateOutputInfo(image) {
   const canvas = document.createElement("canvas");
   canvas.width = image.width;
   canvas.height = image.height;
-  outputImageInfo = {
-    width: image.width,
-    height: image.height,
-  }
+  const imageContainer = document.querySelector(".image-comparison-slider");
+  const container = document.querySelector(".image-comparison-container");
+  container.style.display = "flex";
   const ctx = canvas.getContext("2d");
   ctx.drawImage(image, 0, 0);
   const blob = canvas.toBlob((blob) => {
@@ -212,6 +209,8 @@ async function processImage() {
       console.log("使用分块处理方式");
       const { result: processedResult, timings: tileTimings } =
         await processImageWithTiles(image);
+      const progressBar = document.getElementById("progressBar");
+      progressBar.value = 0;
       result = processedResult;
       timings = tileTimings;
     } else {
@@ -284,6 +283,7 @@ async function processImage() {
     alert("处理失败: " + error.message);
   } finally {
     loadingDiv.style.display = "none";
+    progressContainer.style.display = "none";
     processingIndicator.style.display = "none";
   }
 }
@@ -291,15 +291,8 @@ async function processImage() {
 function initImageComparison() {
   const slider = document.querySelector(".slider");
   const sliderHandle = document.querySelector(".slider-handle");
-  const imageContainer = document.querySelector(".image-comparison-slider");
-  const originalImage = document.getElementById("originalImage");
   const processedImage = document.getElementById("processedImage");
-  const container = document.querySelector(".image-comparison-container");
-  container.style.display = "flex";
-  imageContainer.style.width = outputImageInfo.width + 'px';
-  container.style.height = outputImageInfo.height + 'px';
-  console.log("style", container.style.height);
-
+  const container = document.querySelector(".image-comparison-slider");
   let isSliding = false;
 
   const startSliding = () => {
@@ -350,11 +343,18 @@ function downloadImage(){
   downloadLink.click();
 }
 
+//test
+function downloadProcessedTile(dataUrl, filename) {
+  const downloadLink = document.createElement("a");
+  downloadLink.href = dataUrl;
+  downloadLink.download = filename; // 设置下载文件名
+  downloadLink.click(); // 触发下载
+}
+
 // 分块处理大图像
 async function processImageWithTiles(imageElement) {
   const modelConfig = ModelConfigs[currentModel];
   const tileSize = modelConfig.tileSize;
-  const overlapSize = modelConfig.overlapSize;
   const scale = modelConfig.scale;
 
   // 创建输出画布
@@ -363,112 +363,121 @@ async function processImageWithTiles(imageElement) {
   outputCanvas.height = imageElement.height * scale;
   const outputCtx = outputCanvas.getContext("2d");
 
-  // 计算需要的块数（基于tileSize计算）
-  const numTilesX = Math.ceil(imageElement.width / tileSize);
-  const numTilesY = Math.ceil(imageElement.height / tileSize);
+  // 计算切割起点坐标
+  let tiles = [];
 
-  console.log("分块信息:", {
-    tileSize,
-    overlapSize,
-    numTilesX,
-    numTilesY,
-    imageSize: { width: imageElement.width, height: imageElement.height },
-    outputSize: { width: outputCanvas.width, height: outputCanvas.height },
-  });
+  let destWidth = imageElement.width;
+  let destHeight = imageElement.height;
+  if(destWidth < tileSize && destHeight < tileSize){
+    tiles.push({ x: 0, y: 0 });
+  }else if(destHeight < tileSize){
+    let tempWidth = 0;
+    while(destWidth > tileSize){
+      tiles = [...tiles, { x: tempWidth, y: 0 }];
+      tempWidth += tileSize;
+      destWidth -= tileSize;
+    }
+    tiles = [...tiles, { x: imageElement.width - tileSize, y : 0 }];
+  }else if(destWidth < tileSize){
+    let tempHeight = 0;
+    while(destHeight > tileSize){
+      tiles = [...tiles, { x: 0, y: tempHeight }];
+      tempHeight += tileSize;
+      destHeight -= tileSize;
+    }
+    tiles = [...tiles, { x: 0, y : imageElement.height - tileSize }];
+  }else{
+    let tempWidth = 0;
+    let tempHeight = 0;
+    while(destHeight > tileSize){
+      tempWidth = 0;
+      destWidth = imageElement.width;
+      while(destWidth > tileSize){
+        tiles = [...tiles, { x: tempWidth, y: tempHeight }];
+        destWidth -= tileSize;
+        tempWidth += tileSize;
+      }
+      tiles = [...tiles, { x: imageElement.width - tileSize, y: tempHeight }];
+      destHeight -= tileSize;
+      tempHeight += tileSize;
+    }
+    destWidth = imageElement.width;
+    tempWidth = 0;
+    while(destWidth > tileSize){
+      tiles = [...tiles, { x: tempWidth, y: imageElement.height - tileSize }];
+      destWidth -= tileSize;
+      tempWidth += tileSize;
+    }
+    tiles = [...tiles, { x: imageElement.width - tileSize, y: imageElement.height - tileSize }];
+  }
 
   let totalPreprocessTime = 0;
   let totalInferenceTime = 0;
   let totalPostprocessTime = 0;
 
   const progressBar = document.getElementById("progressBar");
-  const totalTiles = numTilesX * numTilesY;
+  progressBar.max = tiles.length;
 
-  for (let y = 0; y < numTilesY; y++) {
-    for (let x = 0; x < numTilesX; x++) {
-      // 计算输入区域（考虑重叠）
-      const sourceX = x * tileSize;
-      const sourceY = y * tileSize;
+  for (let i = 0; i < tiles.length; i++) {
+    const { x, y } = tiles[i];
 
-      // 计算当前块的实际宽度和高度（包括重叠区域）
-      const currentTileWidth = Math.min(tileSize, imageElement.width - sourceX);
-      const currentTileHeight = Math.min(
-        tileSize,
-        imageElement.height - sourceY
-      );
+    // 创建临时画布
+    const tileCanvas = document.createElement("canvas");
+    tileCanvas.width = tileSize;
+    tileCanvas.height = tileSize;
+    const tileCtx = tileCanvas.getContext("2d");
 
-      // 创建临时画布
-      const tileCanvas = document.createElement("canvas");
-      tileCanvas.width = tileSize;
-      tileCanvas.height = tileSize;
-      const tileCtx = tileCanvas.getContext("2d");
+    // 绘制当前块
+    tileCtx.drawImage(
+      imageElement,
+      x,
+      y,
+      tileSize,
+      tileSize,
+      0,
+      0,
+      tileSize,
+      tileSize
+    );
 
-      // 填充黑色背景
-      tileCtx.fillStyle = "black";
-      tileCtx.fillRect(0, 0, tileSize, tileSize);
+    // 处理当前块
+    const preprocessStart = performance.now();
+    const { tensor, colorInfo } = await modelConfig.preprocess(tileCanvas);
+    totalPreprocessTime += performance.now() - preprocessStart;
 
-      // 绘制当前块
-      tileCtx.drawImage(
-        imageElement,
-        sourceX,
-        sourceY,
-        currentTileWidth,
-        currentTileHeight,
-        0,
-        0,
-        currentTileWidth,
-        currentTileHeight
-      );
+    const inferenceStart = performance.now();
+    const feeds = { [modelConfig.inputName]: tensor };
+    const outputTensor = (await session.run(feeds))[modelConfig.outputName];
+    totalInferenceTime += performance.now() - inferenceStart;
 
-      // 处理当前块
-      const preprocessStart = performance.now();
-      const { tensor, colorInfo } = await modelConfig.preprocess(tileCanvas);
-      totalPreprocessTime += performance.now() - preprocessStart;
+    const postprocessStart = performance.now();
+    const processedTileDataUrl = await modelConfig.postprocess(
+      outputTensor,
+      colorInfo
+    );
+    totalPostprocessTime += performance.now() - postprocessStart;
 
-      const inferenceStart = performance.now();
-      const feeds = { [modelConfig.inputName]: tensor };
-      const outputTensor = (await session.run(feeds))[modelConfig.outputName];
-      totalInferenceTime += performance.now() - inferenceStart;
+    const processedTile = new Image();
+    await new Promise((resolve) => {
+      processedTile.onload = resolve;
+      processedTile.src = processedTileDataUrl;
+    });
 
-      const postprocessStart = performance.now();
-      const processedTileDataUrl = await modelConfig.postprocess(
-        outputTensor,
-        colorInfo
-      );
-      totalPostprocessTime += performance.now() - postprocessStart;
-
-      const processedTile = new Image();
-      await new Promise((resolve) => {
-        processedTile.onload = resolve;
-        processedTile.src = processedTileDataUrl;
-      });
-
-      // 计算输出位置（基于原始tileSize）
-      const destX = x * tileSize * scale;
-      const destY = y * tileSize * scale;
-      const destWidth = Math.min(tileSize * scale, outputCanvas.width - destX);
-      const destHeight = Math.min(
-        tileSize * scale,
-        outputCanvas.height - destY
-      );
-
-      // 更新进度条
-      const progress = ((y * numTilesX + x + 1) / totalTiles) * 100;
-      progressBar.value = progress;
-
-      console.log(`处理进度: ${progress.toFixed(1)}%`);
-      // 直接绘制到对应位置
-      outputCtx.drawImage(
-        processedTile,
-        0,
-        0,
-        destWidth,
-        destHeight,
-        destX,
-        destY,
-        destWidth,
-        destHeight
-      );
-    }
+    // 绘制到输出画布
+    outputCtx.drawImage(
+      processedTile,
+      0,
+      0,
+      tileSize * scale,
+      tileSize * scale,
+      x * scale,
+      y * scale,
+      tileSize * scale,
+      tileSize * scale
+    );
+    // downloadProcessedTile(processedTileDataUrl, `processed_tile_${i}.png`);
+    // 更新进度条
+    progressBar.value = i + 1;
   }
 
   return {
@@ -480,6 +489,7 @@ async function processImageWithTiles(imageElement) {
     },
   };
 }
+
 
 // 处理测试图像上传
 async function handleTestImageUpload(event) {

@@ -5,7 +5,7 @@ if (typeof ort !== "undefined") {
 }
 
 let session = null;
-let currentBackend = "webgpu";
+let currentBackend = "wasm";
 import { ModelConfigs } from "./modelConfigs.js";
 export let currentModel = ModelConfigs["srcnn_x4"].name;
 const state = {
@@ -13,7 +13,7 @@ const state = {
 };
 
 // 初始化ONNX运行时
-async function initONNX() {
+export async function initONNX() {
   try {
     ort.env.debug = true;
     ort.env.webgpu = {
@@ -38,7 +38,6 @@ async function initONNX() {
     session = await ort.InferenceSession.create(getModelPath(currentModel), {
       executionProviders: [currentBackend],
       graphOptimizationLevel: "all",
-      verbose: true,
       // logSeverityLevel: 0,
     });
 
@@ -70,18 +69,28 @@ async function initONNX() {
     return true;
   } catch (e) {
     console.error("初始化失败:", e);
-    // 如果是 WebGPU 失败，尝试切换到 WebGL
-    if (currentBackend === "webgpu") {
-      console.log("正在切换到 WebGL 后端...");
-      currentBackend = "webgl";
-      return initONNX();
+    // 如果是 WebGPU 或 WebGL 失败，尝试切换到 WASM
+    if (currentBackend === "webgpu" || currentBackend === "webgl") {
+      console.log("正在切换到 WASM 后端...");
+      currentBackend = "wasm";
+      try {
+        session = await ort.InferenceSession.create(getModelPath(currentModel), {
+          executionProviders: [currentBackend],
+          graphOptimizationLevel: "all",
+        });
+        console.log("已切换到 WASM 后端");
+        return true;
+      } catch (wasmError) {
+        console.error("切换到 WASM 后端失败:", wasmError);
+        return false;
+      }
     }
     return false;
   }
 }
 
 // 检查后端可用性并返回设备（如果是 WebGPU）
-async function checkBackendAvailability(backend) {
+export async function checkBackendAvailability(backend) {
   try {
     switch (backend) {
       case "webgpu":
@@ -129,7 +138,7 @@ async function checkBackendAvailability(backend) {
 }
 
 // 切换后端
-async function switchBackend(backend) {
+export async function switchBackend(backend) {
   try {
     // 先检查后端是否可用
     const isAvailable = await checkBackendAvailability(backend);
@@ -160,12 +169,12 @@ async function switchBackend(backend) {
         sessionOptions
       );
 
-      console.log(`已切换到 ${backend.toUpperCase()} 后端`);
+      console.log(`已切换到 ${backend} 后端`);
 
       // 更新UI状态
       const backendStatus = document.getElementById("backendStatus");
       if (backendStatus) {
-        backendStatus.textContent = `✓ ${backend.toUpperCase()} 已启用`;
+        backendStatus.textContent = `✓ ${backend} 已启用`;
         backendStatus.className = "status-success";
       }
 
@@ -256,19 +265,19 @@ export async function switchModel(modelName) {
 }
 
 // 获取模型路径
-function getModelPath(modelName) {
+export function getModelPath(modelName) {
   return `./models/${modelName}.onnx`;
 }
 
 // 移除或标记为废弃
-async function preprocessImage(imageData) {
+export async function preprocessImage(imageData) {
   console.warn(
     "preprocessImage is deprecated. Please use model specific preprocessing."
   );
   // 保留作为兼容层或完全移除
 }
 
-async function postprocessTensor(tensor, width, height) {
+export async function postprocessTensor(tensor, width, height) {
   console.warn(
     "postprocessTensor is deprecated. Please use model specific postprocessing."
   );
@@ -289,11 +298,6 @@ window.addEventListener("load", async () => {
 });
 
 export {
-  checkBackendAvailability,
-  switchBackend,
-  initONNX,
-  preprocessImage,
-  postprocessTensor,
   session,
   currentBackend,
   state,

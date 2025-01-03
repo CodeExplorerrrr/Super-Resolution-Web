@@ -26,6 +26,7 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
+  height: 600px;
   padding-top: 20px;
   margin-bottom: 40px;
 }
@@ -34,6 +35,7 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
+  background: #495057;
 }
 
 .image-comparison-slider img {
@@ -42,6 +44,8 @@ body {
   left: 0;
   width: 100%;
   height: auto;
+  max-height: 100%;
+  object-fit: contain;
   display: block;
 }
 
