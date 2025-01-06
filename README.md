@@ -2,10 +2,10 @@
 
 # SR-Inference-Web
 
-[![GitHub Stars](https://img.shields.io/github/stars/CodeExplorerrrr/SR-Inference-Web?style=social)](https://github.com/CodeExplorerrrr/SR-Inference-Web)
-[![License](https://img.shields.io/github/license/CodeExplorerrrr/SR-Inference-Web)](./LICENSE)
-![Visitors](https://visitor-badge.glitch.me/badge?page_id=CodeExplorerrrr.SR-Inference-Web)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Fyour-website-link.com)](https://v0-my-project-47hnf0zphqp.vercel.app/)
+[![GitHub Stars](https://img.shields.io/badge/Stars-yellow)](https://github.com/CodeExplorerrrr/SR-Inference-Web)
+[![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
+[![Visitors](https://img.shields.io/badge/Visitors-brightgreen)](https://visitor-badge.glitch.me/badge?page_id=CodeExplorerrrr.SR-Inference-Web)
+[![Website](https://img.shields.io/badge/Visit%20My%20Site-Click%20Here-brightgreen)](https://v0-my-project-47hnf0zphqp.vercel.app/)
 
 ---
 
