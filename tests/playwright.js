@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
 
-const backends = ['webgpu', 'wasm'];
+const backends = ['webgpu', 'wasm', 'webnn'];
 const models = [
     'srcnn_x4',
     'Real-ESRGAN-General-x4v3',
@@ -47,18 +47,6 @@ if (inputImages.length === 0) {
     console.log('页面加载成功。');
 
     for (const backend of backends) {
-        let skipBackend = false;
-
-        page.on('dialog', async (dialog) => {
-            console.log(`弹窗检测: ${dialog.message()}`);
-            if (dialog.message().includes(backend)) {
-                console.log(`检测到不支持的后端 (${backend})，跳过此后端测试。`);
-                await dialog.dismiss();
-                skipBackend = true;
-            } else {
-                await dialog.dismiss();
-            }
-        });
 
         try {
             await page.selectOption('#backendSelect', backend);
@@ -72,11 +60,6 @@ if (inputImages.length === 0) {
                 backend,
                 { timeout: 10000 },
             );
-
-            if (skipBackend) {
-                console.log(`跳过后端: ${backend}`);
-                continue;
-            }
 
             for (const model of models) {
                 for (const inputImage of inputImages) {
@@ -154,6 +137,8 @@ if (inputImages.length === 0) {
                         } catch (error) {
                             console.error(`超时：输出图片未生成，后端: ${backend}, 模型: ${model}, 输入图片: ${inputImage}`);
                         }
+
+                        console.log("============================")
                     } catch (error) {
                         console.error(`测试失败，跳过模型: ${model}, 输入图片: ${inputImage}，后端: ${backend}。错误: ${error.message}`);
                     }
@@ -161,8 +146,6 @@ if (inputImages.length === 0) {
             }
         } catch (error) {
             console.error(`测试失败，跳过后端: ${backend}。错误: ${error.message}`);
-        } finally {
-            skipBackend = false;
         }
     }
 
