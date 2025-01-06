@@ -1,10 +1,10 @@
----
-
 # SR-Inference-Web
 
-[![GitHub Stars](https://img.shields.io/badge/Stars-yellow)](https://github.com/CodeExplorerrrr/SR-Inference-Web)
+[![GitHub Stars](https://img.shields.io/badge/Stars-Click%20Here-yellow)](https://github.com/CodeExplorerrrr/SR-Inference-Web)
 [![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
 [![Website](https://img.shields.io/badge/Visit%20My%20Site-Click%20Here-brightgreen)](https://v0-my-project-47hnf0zphqp.vercel.app/)
+[![English](https://img.shields.io/badge/English-Click%20Here-lightgray)](README.md)
+[![Chinese](https://img.shields.io/badge/Chinese-Click%20Here-lightgray)](README_CN.md)
 
 ---
 
