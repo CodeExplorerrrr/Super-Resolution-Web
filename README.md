@@ -144,6 +144,12 @@ This project utilizes the following pre-trained models. Each model is governed b
 - Users are responsible for ensuring compliance with the terms of each model's license when using or redistributing this project.
 ---
 
+## 📧 Contact
+
+For inquiries, feel free to reach out to me at: **weizej@foxmail.com**
+
+---
+
 ## 🙏 Acknowledgments
 
 Special thanks to **SenseTime** for providing support and resources, as well as the **MiaoHua Team** and mentor **Haotian Zhou** for their professional guidance!
