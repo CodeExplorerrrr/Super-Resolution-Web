@@ -142,7 +142,18 @@ This project utilizes the following pre-trained models. Each model is governed b
 - The **MIT License** applies to all original code in this repository.
 - The pre-trained models included or referenced in this project are subject to their own licenses, as detailed above.
 - Users are responsible for ensuring compliance with the terms of each model's license when using or redistributing this project.
+---
+
+## 🙏 Acknowledgments
+
+Special thanks to **SenseTime** for their exceptional support and resources, and to the **Miaohua Team** for their professional assistance.
+
+A special mention to **Zhou Haotian**, mentor from the Miaohua Team, for his invaluable guidance throughout the project.
+
+Your contributions have been integral to the successful completion and high-quality delivery of this project. Thank you!
 
 ---
+
+
 
 
