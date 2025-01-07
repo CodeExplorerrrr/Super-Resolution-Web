@@ -146,13 +146,12 @@ This project utilizes the following pre-trained models. Each model is governed b
 
 ## 🙏 Acknowledgments
 
-Special thanks to **SenseTime** for their exceptional support and resources, and to the **Miaohua Team** for their professional assistance.
+Special thanks to **SenseTime** for providing support and resources, as well as the **MiaoHua Team** and mentor **Haotian Zhou** for their professional guidance!
 
-A special mention to **Zhou Haotian**, mentor from the Miaohua Team, for his invaluable guidance throughout the project.
-
-Your contributions have been integral to the successful completion and high-quality delivery of this project. Thank you!
+Your contributions were instrumental in ensuring the smooth progress and high-quality delivery of this project. Heartfelt thanks!
 
 ---
+
 
 
 
