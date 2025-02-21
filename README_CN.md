@@ -1,4 +1,4 @@
-# SR-Inference-Web
+# Super-Resolution-Web
 
 [![GitHub Stars](https://img.shields.io/badge/Stars-yellow)](https://github.com/CodeExplorerrrr/SR-Inference-Web)
 [![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
@@ -33,13 +33,13 @@
 ### 1. 克隆项目仓库  
 复制以下命令克隆项目：
 ```bash
-git clone https://github.com/CodeExplorerrrr/SR-Inference-Web.git
+git clone https://github.com/CodeExplorerrrr/Super-Resolution-Web.git
 ```
 
 ### 2. 安装依赖
 进入项目目录并安装所需依赖：
 ```bash
-cd SR-Inference-Web
+cd Super-Resolution-Web
 yarn
 ```
 

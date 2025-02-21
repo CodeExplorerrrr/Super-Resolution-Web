@@ -1,4 +1,4 @@
-# SR-Inference-Web
+# Super-Resolution-Web
 
 [![GitHub Stars](https://img.shields.io/badge/Stars-Click%20Here-yellow)](https://github.com/CodeExplorerrrr/SR-Inference-Web)
 [![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
@@ -32,13 +32,13 @@ A browser-based super-resolution inference tool that enhances image quality usin
 ### 1. Clone the Repository  
 Copy the following command to clone the project:
 ```bash
-git clone https://github.com/CodeExplorerrrr/SR-Inference-Web.git
+git clone https://github.com/CodeExplorerrrr/Super-Resolution-Web.git
 ```
 
 ### 2. Install Dependencies  
 Navigate to the project directory and install required dependencies:  
 ```bash
-cd SR-Inference-Web
+cd Super-Resolution-Web
 yarn
 ```
 
